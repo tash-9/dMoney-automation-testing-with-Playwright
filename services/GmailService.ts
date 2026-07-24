@@ -16,7 +16,7 @@ export class GmailService {
 
   private assertToken(): void {
     if (!this.accessToken) {
-      throw new Error('GMAIL_ACCESS_TOKEN is not set. See README.md for how to generate one.');
+      throw new Error('GMAIL_ACCESS_TOKEN environment variable is not set');
     }
   }
 
@@ -24,46 +24,42 @@ export class GmailService {
     return { Authorization: `Bearer ${this.accessToken}` };
   }
 
-  private async latestMessageId(query?: string): Promise<string | null> {
-    const params: Record<string, string> = { maxResults: '1' };
-    if (query) params.q = query;
-
-    const res = await this.request.get(GmailService.API, { headers: this.authHeader, params });
+  private async latestMessageId(): Promise<string | null> {
+    const res = await this.request.get(GmailService.API, { headers: this.authHeader });
     if (!res.ok()) {
-      throw new Error(`Gmail API error (list): ${res.status()} ${res.statusText()}`);
+      throw new Error(`Gmail API error: ${res.status()} ${res.statusText()}`);
     }
     const body = await res.json();
     return body.messages?.[0]?.id ?? null;
   }
 
-  async readLatestSnippet(query?: string): Promise<string | null> {
+  async readLatestSnippet(): Promise<string | null> {
     this.assertToken();
-    const id = await this.latestMessageId(query);
-    if (!id) return null;
-
+    const id = await this.latestMessageId();
+    if (!id) {
+      throw new Error('Failed to get message ID from Gmail - check if GMAIL_ACCESS_TOKEN has proper permissions');
+    }
     const res = await this.request.get(`${GmailService.API}/${id}`, { headers: this.authHeader });
     if (!res.ok()) {
-      throw new Error(`Gmail API error (get): ${res.status()} ${res.statusText()}`);
+      throw new Error(`Gmail API error: ${res.status()} ${res.statusText()}`);
     }
     const body = await res.json();
     return body.snippet ?? null;
   }
 
-  async currentOtp(query?: string): Promise<string> {
-    const snippet = await this.readLatestSnippet(query).catch(() => null);
+  async currentOtp(): Promise<string> {
+    const snippet = await this.readLatestSnippet(); // no silent .catch() — real errors surface now
     return GmailService.extractOtp(snippet);
   }
 
   async waitForNewOtp(
     previousOtp: string,
-    query?: string,
-    { attempts = 15, intervalMs = 2000 }: { attempts?: number; intervalMs?: number } = {},
+    { attempts = 10, intervalMs = 1000 }: { attempts?: number; intervalMs?: number } = {},
   ): Promise<string> {
-    this.assertToken();
     for (let i = 0; i < attempts; i++) {
-      const otp = await this.currentOtp(query);
-      if (otp && otp !== previousOtp) return otp;
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      const otp = await this.currentOtp();
+      if (otp && otp !== previousOtp) return otp;
     }
     throw new Error(`No new OTP arrived within ${(attempts * intervalMs) / 1000}s.`);
   }
