@@ -26,20 +26,8 @@ export class RegisterPage extends BasePage {
     return this.page.getByRole('button', { name: /Create Account/ });
   }
 
-  /**
-   * Ensures we're on the register page and it has rendered.
-   *
-   * Only performs a hard navigation (`page.goto`) if we're not already
-   * on `/register`. The app is client-side routed, so callers that get
-   * here via HomePage.clickSignUp() are already on `/register` — a
-   * second full-page navigation to that deep link was hitting the
-   * server directly (bypassing the SPA router) and timing out because
-   * "Create an Account" never rendered.
-   */
   async open(): Promise<void> {
-    if (!/\/register(?:$|[/?#])/.test(this.page.url())) {
-      await this.goto('/register');
-    }
+    await this.goto('/register');
     await expect(this.page.getByText('Create an Account')).toBeVisible();
   }
 
