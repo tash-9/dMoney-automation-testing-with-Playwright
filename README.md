@@ -94,9 +94,6 @@ Repository secrets/variables required (**Settings → Secrets and variables → 
 - Secrets: `GMAIL_BASE_LOCAL`, `GMAIL_ACCESS_TOKEN`
 - Variables: `EXISTING_CUSTOMER_PHONE`
 
-> Note: the target site sits behind Cloudflare bot-protection, which blocks
-> GitHub's shared-runner IPs. CI is set up to run on a **self-hosted runner**
-> for that reason — see the workflow file for details.
 
 **Screenshot: successful CI run**
 TO BE UPLOADED
