@@ -24,7 +24,6 @@ jobs:
       CUSTOMER_DEPOSIT_AMOUNT: '500'
       EXISTING_CUSTOMER_PHONE: ${{ vars.EXISTING_CUSTOMER_PHONE }}
       GMAIL_BASE_LOCAL: ${{ secrets.GMAIL_BASE_LOCAL }}
-      GMAIL_ACCESS_TOKEN: ${{ secrets.GMAIL_ACCESS_TOKEN }}
 
     steps:
       - name: Checkout
@@ -42,6 +41,30 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      # A raw OAuth access token stored as a secret expires (~1hr) and then
+      # every run fails with "Gmail API error: 401". Mint a fresh access
+      # token from a long-lived refresh token right before the tests run
+      # instead. Requires three new repo secrets: GMAIL_CLIENT_ID,
+      # GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN (see note below).
+      - name: Refresh Gmail access token
+        id: gmail_token
+        run: |
+          RESPONSE=$(curl -s -X POST https://oauth2.googleapis.com/token \
+            -d client_id="${{ secrets.GMAIL_CLIENT_ID }}" \
+            -d client_secret="${{ secrets.GMAIL_CLIENT_SECRET }}" \
+            -d refresh_token="${{ secrets.GMAIL_REFRESH_TOKEN }}" \
+            -d grant_type=refresh_token)
+
+          ACCESS_TOKEN=$(echo "$RESPONSE" | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).access_token')
+
+          if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "undefined" ]; then
+            echo "::error::Failed to refresh Gmail access token: $RESPONSE"
+            exit 1
+          fi
+
+          echo "::add-mask::$ACCESS_TOKEN"
+          echo "GMAIL_ACCESS_TOKEN=$ACCESS_TOKEN" >> "$GITHUB_ENV"
+
       - name: Run Playwright tests
         run: npx playwright test
 
@@ -58,3 +81,10 @@ jobs:
 # passes. If that happens, you'll need a self-hosted runner (Settings →
 # Actions → Runners) instead of `runs-on: ubuntu-latest` — check this early,
 # don't wait until submission day.
+#
+# NOTE: to get GMAIL_REFRESH_TOKEN, run Google's OAuth Playground
+# (https://developers.google.com/oauthplayground) once against the
+# https://www.googleapis.com/auth/gmail.readonly scope using your own
+# GMAIL_CLIENT_ID/GMAIL_CLIENT_SECRET (from Google Cloud Console), then
+# copy the refresh token it returns into a repo secret. It doesn't expire
+# unless revoked, so you only need to do this once.
