@@ -99,9 +99,12 @@ Repository secrets/variables required (**Settings → Secrets and variables → 
 > for that reason — see the workflow file for details.
 
 **Screenshot: successful CI run**
-
+TO BE UPLOADED
+---
 
 **Screenshot: Playwright report summary**
+<img width="459" height="116" alt="image" src="https://github.com/user-attachments/assets/8ddba2e5-7fac-4118-bd4e-3eee2adeab6c" />
+
 <img width="1918" height="813" alt="image" src="https://github.com/user-attachments/assets/92c5bdce-39db-4c05-b09b-ed1d2021148c" />
 
 
