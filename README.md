@@ -96,11 +96,15 @@ Repository secrets/variables required (**Settings → Secrets and variables → 
 
 
 **Screenshot: successful CI run**
-TO BE UPLOADED
+
+<img width="943" height="364" alt="image" src="https://github.com/user-attachments/assets/014499ea-6876-44e7-b64a-bfbe04316939" />
+
 ---
 
 **Screenshot: Playwright report summary**
-<img width="459" height="116" alt="image" src="https://github.com/user-attachments/assets/8ddba2e5-7fac-4118-bd4e-3eee2adeab6c" />
+
+<img width="959" height="149" alt="image" src="https://github.com/user-attachments/assets/29dfe8c7-885e-4e0e-9db9-7a274994d70d" />
+
 
 <img width="1918" height="813" alt="image" src="https://github.com/user-attachments/assets/92c5bdce-39db-4c05-b09b-ed1d2021148c" />
 
